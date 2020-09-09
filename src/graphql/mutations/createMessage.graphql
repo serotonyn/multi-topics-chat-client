@@ -1,0 +1,19 @@
+mutation CreateMessage(
+  $text: String!
+  $topic: String!
+  $isNewTopic: Boolean!
+  $color: String!
+  $otherUserId: Float!
+) {
+  createMessage(
+    input: {
+      text: $text
+      topic: $topic
+      color: $color
+      otherUserId: $otherUserId
+      isNewTopic: $isNewTopic
+    }
+  ) {
+    ...MessageSnippet
+  }
+}

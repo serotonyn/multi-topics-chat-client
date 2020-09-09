@@ -1,0 +1,8 @@
+query Messages($limit: Int!, $offset: Int, $otherUserId: Int!) {
+  messages(limit: $limit, offset: $offset, otherUserId: $otherUserId) {
+    hasMore
+    messages {
+      ...MessageSnippet
+    }
+  }
+}

@@ -1,0 +1,6 @@
+query Topics($otherUserId: Int!) {
+  topics(otherUserId: $otherUserId) {
+    label
+    color
+  }
+}

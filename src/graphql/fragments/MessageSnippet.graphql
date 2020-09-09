@@ -1,0 +1,14 @@
+fragment MessageSnippet on Message {
+  id
+  text
+  topic
+  color
+  createdAt
+  updatedAt
+  user {
+    id
+  }
+  otherUser {
+    id
+  }
+}

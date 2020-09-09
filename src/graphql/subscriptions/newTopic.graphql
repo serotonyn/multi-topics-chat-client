@@ -1,0 +1,6 @@
+subscription NewTopic {
+  newTopicSubscription {
+    label
+    color
+  }
+}
