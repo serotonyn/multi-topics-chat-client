@@ -11,11 +11,11 @@ export default () => {
   return (
     <Router>
       <Switch>
-        <AuthRoute exact path="/" component={App} />
+        {/* <AuthRoute exact path="/" component={App} />
         <AuthRoute exact path="/chat/:id" component={Chat} />
         <Route path="/register" component={Register} />
-        <Route path="/login" component={Login} />
-        <Route path="/404" component={Error404} />
+        <Route path="/login" component={Login} /> */}
+        <Route path="/" component={Error404} />
       </Switch>
     </Router>
   );
