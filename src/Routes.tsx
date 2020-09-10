@@ -10,8 +10,8 @@ export default () => {
   return (
     <Router>
       <Switch>
-        <AuthRoute exact path="/" component={App} />
-        <AuthRoute exact path="/chat/:id" component={Chat} />
+        {/* <AuthRoute exact path="/" component={App} />
+        <AuthRoute exact path="/chat/:id" component={Chat} /> */}
         <Route path="/login" component={Login} />
         <Route path="/404" component={Error404} />
       </Switch>
