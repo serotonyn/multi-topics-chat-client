@@ -3,10 +3,10 @@ import {
   SelectMenu,
   Button,
   Position,
-  DirectionRightIcon,
+  // DirectionRightIcon,
   TextInput,
   Pane,
-  IconButton,
+  // IconButton,
 } from "evergreen-ui";
 import { intToRGB, createIconB64 } from "../utils/generateTopicColor";
 import {
@@ -32,7 +32,15 @@ const subscribeToNewTopics = (
   });
 };
 
-export const MessageInput = ({ otherUserId }: { otherUserId: number }) => {
+export const MessageInput = ({
+  otherUserId,
+  onCreateMessageCompleted,
+  me,
+}: {
+  otherUserId: number;
+  onCreateMessageCompleted: any;
+  me: any;
+}) => {
   const [options, setOptions] = useState<
     { label: string; icon: string; color: string }[]
   >([]);
@@ -44,7 +52,13 @@ export const MessageInput = ({ otherUserId }: { otherUserId: number }) => {
   });
   const [first, setFirst] = useState(true);
 
-  const [createMessage] = useCreateMessageMutation();
+  const [createMessage] = useCreateMessageMutation({
+    // onCompleted: onCreateMessageCompleted,
+    onError: (...args) => {
+      console.log(args);
+    },
+    // refetchQueries: ["Messages"],
+  });
   //TODO handle useTopicsQuery error
   const { data: topicsData, subscribeToMore } = useTopicsQuery({
     variables: { otherUserId },
@@ -104,8 +118,40 @@ export const MessageInput = ({ otherUserId }: { otherUserId: number }) => {
           (t) => t.label === selectedTopic.label
         ),
       },
-      refetchQueries: ["Messages"],
+      optimisticResponse: {
+        __typename: "Mutation",
+        createMessage: {
+          __typename: "Message",
+          id: 0,
+          createdAt: "",
+          updatedAt: "",
+          user: {
+            id: me.id,
+          },
+          otherUser: {
+            id: otherUserId,
+          },
+          text: inputValue,
+          topic: selectedTopic.label,
+          color: selectedOption ? selectedOption.color : "#fff",
+        },
+      },
+      update: (cache, { data }) => {
+        cache.modify({
+          fields: {
+            messages: (prev) => {
+              if (!data?.createMessage) return prev;
+              const newMessage = data.createMessage;
+
+              return Object.assign({}, prev, {
+                messages: [newMessage, ...prev.messages],
+              });
+            },
+          },
+        });
+      },
     });
+    onCreateMessageCompleted();
     setInputValue("");
   };
 
@@ -160,9 +206,9 @@ export const MessageInput = ({ otherUserId }: { otherUserId: number }) => {
             }
           : {})}
       />
-      <Pane display="flex" alignItems="flex-end">
+      {/* <Pane display="flex" alignItems="flex-end">
         <IconButton appearance="minimal" icon={DirectionRightIcon} />
-      </Pane>
+      </Pane> */}
     </Pane>
   );
 };

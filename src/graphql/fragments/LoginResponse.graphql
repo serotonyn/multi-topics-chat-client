@@ -1,0 +1,8 @@
+fragment LoginResponse on LoginResponse {
+  errors {
+    ...RegularError
+  }
+  ok
+  token
+  refreshToken
+}

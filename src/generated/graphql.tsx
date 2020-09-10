@@ -95,7 +95,7 @@ export type Mutation = {
   changePassword: UserResponse;
   forgotPassword: Scalars['Boolean'];
   register: UserResponse;
-  login: UserResponse;
+  login: LoginResponse;
   logout: Scalars['Boolean'];
 };
 
@@ -140,11 +140,28 @@ export type UsernamePasswordInput = {
   password: Scalars['String'];
 };
 
+export type LoginResponse = {
+  __typename?: 'LoginResponse';
+  ok: Scalars['Boolean'];
+  token?: Maybe<Scalars['String']>;
+  refreshToken?: Maybe<Scalars['String']>;
+  errors?: Maybe<Array<FieldError>>;
+};
+
 export type Subscription = {
   __typename?: 'Subscription';
   newMessageSubscription: Message;
   newTopicSubscription: Topic;
 };
+
+export type LoginResponseFragment = (
+  { __typename?: 'LoginResponse' }
+  & Pick<LoginResponse, 'ok' | 'token' | 'refreshToken'>
+  & { errors?: Maybe<Array<(
+    { __typename?: 'FieldError' }
+    & RegularErrorFragment
+  )>> }
+);
 
 export type MessageSnippetFragment = (
   { __typename?: 'Message' }
@@ -205,8 +222,8 @@ export type LoginMutationVariables = Exact<{
 export type LoginMutation = (
   { __typename?: 'Mutation' }
   & { login: (
-    { __typename?: 'UserResponse' }
-    & RegularUserResponseFragment
+    { __typename?: 'LoginResponse' }
+    & LoginResponseFragment
   ) }
 );
 
@@ -312,6 +329,22 @@ export type NewTopicSubscription = (
   ) }
 );
 
+export const RegularErrorFragmentDoc = gql`
+    fragment RegularError on FieldError {
+  field
+  message
+}
+    `;
+export const LoginResponseFragmentDoc = gql`
+    fragment LoginResponse on LoginResponse {
+  errors {
+    ...RegularError
+  }
+  ok
+  token
+  refreshToken
+}
+    ${RegularErrorFragmentDoc}`;
 export const MessageSnippetFragmentDoc = gql`
     fragment MessageSnippet on Message {
   id
@@ -326,12 +359,6 @@ export const MessageSnippetFragmentDoc = gql`
   otherUser {
     id
   }
-}
-    `;
-export const RegularErrorFragmentDoc = gql`
-    fragment RegularError on FieldError {
-  field
-  message
 }
     `;
 export const RegularUserFragmentDoc = gql`
@@ -390,10 +417,10 @@ export type CreateMessageMutationOptions = Apollo.BaseMutationOptions<CreateMess
 export const LoginDocument = gql`
     mutation Login($usernameOrEmail: String!, $password: String!) {
   login(usernameOrEmail: $usernameOrEmail, password: $password) {
-    ...RegularUserResponse
+    ...LoginResponse
   }
 }
-    ${RegularUserResponseFragmentDoc}`;
+    ${LoginResponseFragmentDoc}`;
 export type LoginMutationFn = Apollo.MutationFunction<LoginMutation, LoginMutationVariables>;
 
 /**

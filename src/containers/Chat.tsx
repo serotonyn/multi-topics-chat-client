@@ -1,13 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useUserQuery } from "../generated/graphql";
-import {
-  CornerDialog,
-  Button,
-  Text,
-  Heading,
-  Pane,
-  InfoSignIcon,
-} from "evergreen-ui";
+import { Button, Text, Heading, Pane, InfoSignIcon } from "evergreen-ui";
 import { useParams, Redirect } from "react-router-dom";
 import { ChatBox } from "../components/ChatBox";
 import { CenteredSpinner } from "../components/CenteredSpinner";

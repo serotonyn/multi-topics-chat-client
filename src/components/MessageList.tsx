@@ -3,7 +3,6 @@ import { Pane, Text, Spinner, useTheme, Tooltip } from "evergreen-ui";
 import {
   useMessagesQuery,
   NewMessageDocument,
-  useMeQuery,
   MessagesQuery,
 } from "../generated/graphql";
 import { SubscribeToMoreOptions } from "@apollo/client";
@@ -27,17 +26,16 @@ const subscribeToNewMessages = (
   });
 };
 
-const scrollToBottom = (container: any) => {
+export const scrollToBottom = (container: any) => {
   container.scrollTop = container.scrollHeight;
 };
 
-export const MessagesList = ({ otherUserId }: any) => {
+export const MessagesList = ({ otherUserId, isNewMessageCreated, me }: any) => {
   const {
     colors: {
       background: { tint1 },
     },
   } = useTheme();
-  console.log(tint1);
   let container = useRef();
   const history = useHistory();
 
@@ -51,12 +49,6 @@ export const MessagesList = ({ otherUserId }: any) => {
     variables: { limit: 20, otherUserId, offset: null },
     notifyOnNetworkStatusChange: true,
   });
-
-  const { loading: meLoading, data: meData, error: meError } = useMeQuery();
-
-  if (messagesError || meError) {
-    history.push("/404");
-  }
 
   const handleScroll = async () => {
     //@ts-ignore
@@ -100,6 +92,10 @@ export const MessagesList = ({ otherUserId }: any) => {
   useEffect(() => {
     const unsubscribe = subscribeToNewMessages(subscribeToMore);
 
+    if (isNewMessageCreated) {
+      scrollToBottom(container.current);
+      // setIsNewMessageCreated(false);
+    }
     //@ts-ignore
     if (
       container.current &&
@@ -113,10 +109,11 @@ export const MessagesList = ({ otherUserId }: any) => {
     return () => {
       unsubscribe();
     };
-  }, [messagesData, subscribeToMore]);
+  }, [messagesData, subscribeToMore, isNewMessageCreated]);
 
-  if (!meData?.me) return <div>loading</div>;
-
+  if (messagesError) {
+    history.push("/404");
+  }
   return (
     <Pane
       //@ts-ignore
@@ -135,21 +132,19 @@ export const MessagesList = ({ otherUserId }: any) => {
       height="100%"
     >
       <Pane display="flex" flexDirection="column-reverse">
-        {meLoading || messagesLoading ? (
+        {messagesLoading ? (
           <Spinner />
         ) : (
           messagesData!.messages.messages.map((message: any) => (
             <Pane
               height={MESSAGE_HEIGHT}
               key={message.id}
-              alignSelf={
-                message.user.id === meData?.me?.id ? "flex-end" : "flex-start"
-              }
+              alignSelf={message.user.id === me?.id ? "flex-end" : "flex-start"}
             >
               <Tooltip content={message.topic}>
                 <Pane
                   backgroundColor={
-                    message.user.id === meData.me?.id ? tint1 : "#579AD9"
+                    message.user.id === me?.id ? tint1 : "#579AD9"
                   }
                   margin="0.3rem"
                   paddingX=".8rem"
@@ -163,9 +158,7 @@ export const MessagesList = ({ otherUserId }: any) => {
                   {message.text && (
                     <Text
                       size={500}
-                      color={
-                        message.user.id === meData.me?.id ? "black" : "white"
-                      }
+                      color={message.user.id === me?.id ? "black" : "white"}
                     >
                       {message.text}
                     </Text>

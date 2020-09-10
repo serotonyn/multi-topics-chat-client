@@ -9,7 +9,11 @@ import { WebSocketLink } from "@apollo/client/link/ws";
 
 const httpLink = createHttpLink({
   uri: process.env.REACT_APP_PUBLIC_API_URL as string,
-  credentials: "include",
+  // credentials: "include",
+  headers: {
+    "x-token": localStorage.getItem("token"),
+    "x-refresh-token": localStorage.getItem("refreshToken"),
+  },
 });
 
 // TODO move uri to .env
@@ -17,6 +21,11 @@ const wsLink = new WebSocketLink({
   uri: process.env.REACT_APP_WS_API_URL as string,
   options: {
     reconnect: true,
+    lazy: true,
+    connectionParams: () => ({
+      token: localStorage.getItem("token"),
+      refreshToken: localStorage.getItem("refreshToken"),
+    }),
   },
 });
 
