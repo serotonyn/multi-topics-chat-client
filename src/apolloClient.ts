@@ -24,7 +24,6 @@ const authMiddleware = new ApolloLink((operation, forward) => {
 const httpLink = () =>
   createHttpLink({
     uri: process.env.REACT_APP_PUBLIC_API_URL as string,
-    credentials: "include",
     headers: {
       "x-token":
         (console.log(localStorage.getItem("token")),
