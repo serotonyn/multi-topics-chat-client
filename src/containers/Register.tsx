@@ -40,7 +40,9 @@ export const Register = () => {
               setErrors(toErrorMap(response.data.register.errors));
             } else if (response.data?.register.user) {
               // worked
-              history.push("/login");
+              setTimeout(() => {
+                history.push("/login");
+              }, 1000);
             }
           }}
         >

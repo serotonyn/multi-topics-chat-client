@@ -1,20 +1,21 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useMeQuery } from "../generated/graphql";
 import { Redirect, Route } from "react-router-dom";
 import { CenteredSpinner } from "./CenteredSpinner";
 
 export const AuthRoute = ({ component: Component, ...props }: any) => {
-  const { loading, data, error } = useMeQuery({});
-
-  useEffect(() => {}, [data]);
+  const { loading, data, error } = useMeQuery({
+    fetchPolicy: "network-only",
+  });
 
   if (loading) return <CenteredSpinner />;
   if (error) {
     return <Redirect to="/404" />;
   }
 
-  if (!loading && !data?.me) {
+  if (data?.me) {
+    return <Route component={Component} {...props} />;
+  } else {
     return <Redirect to="/login" />;
   }
-  return <Route component={Component} {...props} />;
 };

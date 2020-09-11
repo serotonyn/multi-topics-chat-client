@@ -43,7 +43,6 @@ export const Login = () => {
                 "refreshToken",
                 response.data.login.refreshToken
               );
-              console.log(localStorage.getItem("token"));
               history.push("/");
             }
           }}
