@@ -32,7 +32,6 @@ const httpLink = () =>
     },
   });
 
-// TODO move uri to .env
 const wsLink = new WebSocketLink({
   uri: process.env.REACT_APP_WS_API_URL as string,
   options: {
