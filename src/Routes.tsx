@@ -5,14 +5,16 @@ import { App } from "./containers/App";
 import { Error404 } from "./containers/Error404";
 import { AuthRoute } from "./components/AuthRoute";
 import { Chat } from "./containers/Chat";
+import { Register } from "./containers/Register";
 
 export default () => {
   return (
     <Router>
       <Switch>
-        {/* <AuthRoute exact path="/" component={App} />
-        <AuthRoute exact path="/chat/:id" component={Chat} /> */}
+        <AuthRoute exact path="/" component={App} />
+        <AuthRoute exact path="/chat/:id" component={Chat} />
         <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
         <Route path="/404" component={Error404} />
       </Switch>
     </Router>
