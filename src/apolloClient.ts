@@ -25,9 +25,7 @@ const httpLink = () =>
   createHttpLink({
     uri: process.env.REACT_APP_PUBLIC_API_URL as string,
     headers: {
-      "x-token":
-        (console.log(localStorage.getItem("token")),
-        localStorage.getItem("token")),
+      "x-token": localStorage.getItem("token"),
       "x-refresh-token": localStorage.getItem("refreshToken"),
     },
   });

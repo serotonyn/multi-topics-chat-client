@@ -1,5 +1,14 @@
-query Messages($limit: Int!, $offset: Int, $otherUserId: Int!) {
-  messages(limit: $limit, offset: $offset, otherUserId: $otherUserId) {
+# query Messages($limit: Int!, $offset: Int, $otherUserId: Int!) {
+#   messages(limit: $limit, offset: $offset, otherUserId: $otherUserId) {
+#     hasMore
+#     messages {
+#       ...MessageSnippet
+#     }
+#   }
+# }
+
+query Messages($limit: Int!, $cursor: String, $otherUserId: Int!) {
+  messages(limit: $limit, cursor: $cursor, otherUserId: $otherUserId) {
     hasMore
     messages {
       ...MessageSnippet

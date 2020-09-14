@@ -1,71 +1,110 @@
-import React, { useEffect, useRef } from "react";
-import { Pane, Text, Spinner, useTheme, Tooltip } from "evergreen-ui";
+import React, { useEffect, useRef, useState } from "react";
+import { Pane, Text, Spinner, useTheme, Tooltip, Alert } from "evergreen-ui";
 import {
-  useMessagesQuery,
-  NewMessageDocument,
   MessagesQuery,
+  NewMessageDocument,
+  useMessagesQuery,
 } from "../generated/graphql";
-import { SubscribeToMoreOptions } from "@apollo/client";
-import { useHistory } from "react-router-dom";
-
-const MESSAGE_HEIGHT = 48.59;
-
-const subscribeToNewMessages = (
-  subscribeToMore: (options: SubscribeToMoreOptions) => any
-) => {
-  return subscribeToMore({
-    document: NewMessageDocument,
-    updateQuery: (prev, { subscriptionData }) => {
-      if (!subscriptionData.data) return prev;
-      const newMessage = subscriptionData.data.newMessageSubscription;
-
-      return Object.assign({}, prev, {
-        messages: [...prev.messages.messages, newMessage],
-      });
-    },
-  });
-};
+import beep from "../utils/audioBase64";
+import Linkify from "react-linkify";
 
 export const scrollToBottom = (container: any) => {
   container.scrollTop = container.scrollHeight;
 };
 
-export const MessagesList = ({ otherUserId, isNewMessageCreated, me }: any) => {
+export const MessagesList = ({
+  meId,
+  otherUserId,
+  isNewMessageCreated,
+  setIsNewMessageCreated,
+}: any) => {
   const {
     colors: {
       background: { tint1 },
     },
   } = useTheme();
-  let container = useRef();
-  const history = useHistory();
+  const container = useRef<HTMLDivElement>();
+  const [isNewMessagesAlertShown, setIsNewMessagesAlertShown] = useState(false);
 
-  const {
-    data: messagesData,
-    error: messagesError,
-    loading: messagesLoading,
-    subscribeToMore,
-    fetchMore,
-  } = useMessagesQuery({
-    variables: { limit: 20, otherUserId, offset: null },
-    notifyOnNetworkStatusChange: true,
-  });
+  const { data, error, loading, subscribeToMore, fetchMore } = useMessagesQuery(
+    {
+      variables: { limit: 20, otherUserId, cursor: null },
+      notifyOnNetworkStatusChange: true,
+    }
+  );
+
+  useEffect(() => {
+    if (!data) return;
+
+    if (
+      isNewMessageCreated &&
+      container?.current!.scrollHeight -
+        container?.current!.scrollTop -
+        container?.current!.clientHeight <
+        500
+    ) {
+      scrollToBottom(container.current);
+      setIsNewMessageCreated(false);
+    }
+
+    if (container.current && data.messages.messages.length <= 20) {
+      scrollToBottom(container.current);
+    }
+
+    if (
+      container?.current!.scrollHeight -
+        container?.current!.scrollTop -
+        container?.current!.clientHeight <
+      500
+    ) {
+      scrollToBottom(container.current);
+    }
+
+    const unsubscribe = subscribeToMore({
+      document: NewMessageDocument,
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData.data) return prev;
+        //@ts-ignore
+        const newMessage = subscriptionData.data.newMessageSubscription;
+
+        new Audio(beep).play();
+
+        if (
+          container?.current!.scrollHeight -
+            container?.current!.scrollTop -
+            container?.current!.clientHeight >
+          500
+        ) {
+          setIsNewMessagesAlertShown(true);
+        }
+
+        return Object.assign({}, prev, {
+          messages: {
+            messages: [newMessage, ...prev.messages.messages],
+            __typename: "PaginatedMessages",
+            hasMore: data?.messages.hasMore,
+          },
+        });
+      },
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [data, subscribeToMore, isNewMessageCreated, setIsNewMessageCreated]);
 
   const handleScroll = async () => {
-    //@ts-ignore
     if (
       container.current &&
-      //@ts-ignore
       container.current.scrollTop < 10 &&
-      messagesData &&
-      messagesData.messages &&
-      //   messagesData.messages.messages.length <= 20 &&
-      messagesData?.messages.hasMore
+      data?.messages.hasMore
     ) {
-      const { data } = await fetchMore({
+      const { data: fetchMoreData } = await fetchMore({
         variables: {
           otherUserId,
           limit: 20,
-          offset: messagesData?.messages.messages.length,
+          cursor:
+            data.messages.messages[data.messages.messages.length - 1].createdAt,
         },
         updateQuery: (previousValue, { fetchMoreResult }): MessagesQuery => {
           if (!fetchMoreResult) {
@@ -85,67 +124,49 @@ export const MessagesList = ({ otherUserId, isNewMessageCreated, me }: any) => {
         },
       });
       //@ts-ignore
-      container.current.scrollTop = data.messages.messages.length * 50;
+      container.current.scrollTop = fetchMoreData.messages.messages.length * 50;
+    } else if (
+      // TODO hold this in a variable
+      container?.current!.scrollHeight -
+        container?.current!.scrollTop -
+        container?.current!.clientHeight <
+        50 &&
+      isNewMessagesAlertShown
+    ) {
+      setIsNewMessagesAlertShown(false);
     }
   };
 
-  useEffect(() => {
-    const unsubscribe = subscribeToNewMessages(subscribeToMore);
-
-    if (isNewMessageCreated) {
-      scrollToBottom(container.current);
-      // setIsNewMessageCreated(false);
-    }
-    //@ts-ignore
-    if (
-      container.current &&
-      messagesData &&
-      messagesData.messages &&
-      messagesData.messages.messages.length <= 20
-    ) {
-      scrollToBottom(container.current);
-    }
-
-    return () => {
-      unsubscribe();
-    };
-  }, [messagesData, subscribeToMore, isNewMessageCreated]);
-
-  if (messagesError) {
-    history.push("/404");
-  }
+  if (loading) return <div>loading</div>;
+  if (error) return <div>`Error!`</div>;
+  if (!data) return <div>nodata</div>;
   return (
     <Pane
-      //@ts-ignore
-      ref={(args) => {
+      ref={(args: HTMLDivElement) => {
         container.current = args;
       }}
-      //@ts-ignore
-      onScroll={(args) => {
-        if (messagesLoading) return;
-        //@ts-ignore
-        return handleScroll(args);
+      onScroll={() => {
+        return handleScroll();
       }}
-      overflowY="scroll"
-      flexGrow={1}
-      minHeight={0}
-      height="100%"
+      height="77vh"
+      overflowY={loading ? "initial" : "scroll"}
+      style={{
+        overflowWrap: "anywhere",
+      }}
     >
-      <Pane display="flex" flexDirection="column-reverse">
-        {messagesLoading ? (
+      <Pane display="flex" flexDirection="column-reverse" alignItems="center">
+        {loading ? (
           <Spinner />
         ) : (
-          messagesData!.messages.messages.map((message: any) => (
+          data!.messages.messages.map((message: any) => (
             <Pane
-              height={MESSAGE_HEIGHT}
+              // height={MESSAGE_HEIGHT}
               key={message.id}
-              alignSelf={message.user.id === me?.id ? "flex-end" : "flex-start"}
+              alignSelf={message.user.id === meId ? "flex-end" : "flex-start"}
             >
               <Tooltip content={message.topic}>
                 <Pane
-                  backgroundColor={
-                    message.user.id === me?.id ? tint1 : "#579AD9"
-                  }
+                  backgroundColor={message.user.id === meId ? tint1 : "#579AD9"}
                   margin="0.3rem"
                   paddingX=".8rem"
                   paddingY=".5rem"
@@ -158,9 +179,22 @@ export const MessagesList = ({ otherUserId, isNewMessageCreated, me }: any) => {
                   {message.text && (
                     <Text
                       size={500}
-                      color={message.user.id === me?.id ? "black" : "white"}
+                      color={message.user.id === meId ? "black" : "white"}
+                      whiteSpace="pre-line"
                     >
-                      {message.text}
+                      <Linkify
+                        componentDecorator={(
+                          decoratedHref,
+                          decoratedText,
+                          key
+                        ) => (
+                          <a target="blank" href={decoratedHref} key={key}>
+                            {decoratedText}
+                          </a>
+                        )}
+                      >
+                        {message.text}
+                      </Linkify>
                     </Text>
                   )}
                 </Pane>
@@ -169,6 +203,19 @@ export const MessagesList = ({ otherUserId, isNewMessageCreated, me }: any) => {
           ))
         )}
       </Pane>
+
+      {isNewMessagesAlertShown && (
+        <Alert
+          intent="none"
+          title="There are new messages at the bottom"
+          width="320px"
+          position="absolute"
+          bottom="16vh"
+          left="30px"
+          opacity="0.9"
+          onClick={() => scrollToBottom(container.current)}
+        />
+      )}
     </Pane>
   );
 };

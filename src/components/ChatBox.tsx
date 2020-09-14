@@ -23,7 +23,7 @@ export const ChatBox = ({ otherUser, isShown, setIsShown }: any) => {
   }, [setIsShown]);
 
   const onCreateMessageCompleted = () => {
-    setIsNewMessageCreated(true);
+    setIsNewMessageCreated(() => true);
   };
 
   const { loading: meLoading, data: meData, error: meError } = useMeQuery();
@@ -54,23 +54,27 @@ export const ChatBox = ({ otherUser, isShown, setIsShown }: any) => {
       hasFooter={false}
       isShown={isShown}
       hasClose={false}
+      containerProps={{
+        paddingX: 10,
+        height: "90%",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
-      <Pane height={520}>
-        <Pane display="flex" flexDirection="column" height="100%" width="100%">
-          <MessagesList
-            otherUserId={+otherUser.id}
-            isNewMessageCreated={isNewMessageCreated}
-            me={meData?.me}
-          />
+      <Pane height="77vh" display="flex" flexDirection="column">
+        <MessagesList
+          otherUserId={+otherUser.id}
+          meId={meData?.me?.id}
+          isNewMessageCreated={isNewMessageCreated}
+          setIsNewMessageCreated={setIsNewMessageCreated}
+        />
 
-          <br />
-
-          <MessageInput
-            otherUserId={+otherUser.id}
-            onCreateMessageCompleted={onCreateMessageCompleted}
-            me={meData?.me}
-          />
-        </Pane>
+        <br />
+        <MessageInput
+          otherUserId={+otherUser.id}
+          onCreateMessageCompleted={onCreateMessageCompleted}
+          meId={meData?.me?.id}
+        />
       </Pane>
     </CornerDialog>
   );

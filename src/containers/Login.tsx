@@ -47,13 +47,7 @@ export const Login = () => {
             }
           }}
         >
-          {({
-            isSubmitting,
-            errors,
-          }: {
-            isSubmitting: boolean;
-            errors: any;
-          }) => (
+          {({ isSubmitting }: { isSubmitting: boolean }) => (
             <Form>
               <InputField
                 name="usernameOrEmail"

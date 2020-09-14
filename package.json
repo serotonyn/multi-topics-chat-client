@@ -17,6 +17,8 @@
         "jwt-decode": "^3.0.0-beta.2",
         "react": "^16.13.1",
         "react-dom": "^16.13.1",
+        "react-expanding-textarea": "^2.2.3",
+        "react-linkify": "^1.0.0-alpha",
         "react-router-dom": "^5.2.0",
         "react-scripts": "3.4.3",
         "typescript": "~3.7.2"
@@ -48,6 +50,7 @@
         "@graphql-codegen/typescript": "^1.17.9",
         "@graphql-codegen/typescript-operations": "^1.17.8",
         "@graphql-codegen/typescript-react-apollo": "^2.0.6",
+        "@types/react-linkify": "^1.0.0",
         "@types/react-router-dom": "^5.1.5"
     }
 }

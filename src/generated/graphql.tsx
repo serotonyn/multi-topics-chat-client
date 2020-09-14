@@ -25,7 +25,7 @@ export type Query = {
 
 export type QueryMessagesArgs = {
   otherUserId: Scalars['Int'];
-  offset?: Maybe<Scalars['Int']>;
+  cursor?: Maybe<Scalars['String']>;
   limit: Scalars['Int'];
 };
 
@@ -92,8 +92,6 @@ export type FieldError = {
 export type Mutation = {
   __typename?: 'Mutation';
   createMessage: Message;
-  changePassword: UserResponse;
-  forgotPassword: Scalars['Boolean'];
   register: UserResponse;
   login: LoginResponse;
   logout: Scalars['Boolean'];
@@ -102,17 +100,6 @@ export type Mutation = {
 
 export type MutationCreateMessageArgs = {
   input: MessageInput;
-};
-
-
-export type MutationChangePasswordArgs = {
-  newPassword: Scalars['String'];
-  token: Scalars['String'];
-};
-
-
-export type MutationForgotPasswordArgs = {
-  email: Scalars['String'];
 };
 
 
@@ -253,7 +240,7 @@ export type MeQuery = (
 
 export type MessagesQueryVariables = Exact<{
   limit: Scalars['Int'];
-  offset?: Maybe<Scalars['Int']>;
+  cursor?: Maybe<Scalars['String']>;
   otherUserId: Scalars['Int'];
 }>;
 
@@ -512,8 +499,8 @@ export type MeQueryHookResult = ReturnType<typeof useMeQuery>;
 export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>;
 export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>;
 export const MessagesDocument = gql`
-    query Messages($limit: Int!, $offset: Int, $otherUserId: Int!) {
-  messages(limit: $limit, offset: $offset, otherUserId: $otherUserId) {
+    query Messages($limit: Int!, $cursor: String, $otherUserId: Int!) {
+  messages(limit: $limit, cursor: $cursor, otherUserId: $otherUserId) {
     hasMore
     messages {
       ...MessageSnippet
@@ -535,7 +522,7 @@ export const MessagesDocument = gql`
  * const { data, loading, error } = useMessagesQuery({
  *   variables: {
  *      limit: // value for 'limit'
- *      offset: // value for 'offset'
+ *      cursor: // value for 'cursor'
  *      otherUserId: // value for 'otherUserId'
  *   },
  * });

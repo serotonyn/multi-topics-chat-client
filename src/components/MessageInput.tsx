@@ -1,13 +1,5 @@
-import React, { useState, useEffect } from "react";
-import {
-  SelectMenu,
-  Button,
-  Position,
-  // DirectionRightIcon,
-  TextInput,
-  Pane,
-  // IconButton,
-} from "evergreen-ui";
+import React, { useState, useEffect, useRef } from "react";
+import { SelectMenu, Button, Position, Pane } from "evergreen-ui";
 import { intToRGB, createIconB64 } from "../utils/generateTopicColor";
 import {
   useCreateMessageMutation,
@@ -15,6 +7,7 @@ import {
   NewTopicDocument,
 } from "../generated/graphql";
 import { SubscribeToMoreOptions } from "@apollo/client";
+import Textarea from "react-expanding-textarea";
 
 const subscribeToNewTopics = (
   subscribeToMore: (options: SubscribeToMoreOptions) => any
@@ -35,12 +28,13 @@ const subscribeToNewTopics = (
 export const MessageInput = ({
   otherUserId,
   onCreateMessageCompleted,
-  me,
+  meId,
 }: {
   otherUserId: number;
   onCreateMessageCompleted: any;
-  me: any;
+  meId: any;
 }) => {
+  const textarea = useRef<HTMLTextAreaElement>();
   const [options, setOptions] = useState<
     { label: string; icon: string; color: string }[]
   >([]);
@@ -57,8 +51,8 @@ export const MessageInput = ({
     onError: (...args) => {
       console.log(args);
     },
-    // refetchQueries: ["Messages"],
   });
+
   //TODO handle useTopicsQuery error
   const { data: topicsData, subscribeToMore } = useTopicsQuery({
     variables: { otherUserId },
@@ -66,7 +60,9 @@ export const MessageInput = ({
 
   const handleFilter = (filterValue: any) => {
     // TODO better handle max length
-    // if (filterValue.length > 4) return;
+    if (filterValue.length > 30) {
+      return;
+    }
     if (!options.includes(filterValue)) {
       if (first) {
         setOptions((opts) => [
@@ -103,14 +99,16 @@ export const MessageInput = ({
       );
       setSelectedTopic(newTopic);
     }
+    textarea.current?.focus();
   };
 
-  const handleSubmit = () => {
-    if (!inputValue) return;
+  const handleSubmit = async () => {
+    if (!inputValue.length || inputValue.length > 3000) return;
+    const trimmed = inputValue.trim();
     const selectedOption = options.find((o) => o.label === selectedTopic.label);
-    createMessage({
+    await createMessage({
       variables: {
-        text: inputValue,
+        text: trimmed,
         topic: selectedTopic.label,
         color: selectedOption ? selectedOption.color : "#fff",
         otherUserId,
@@ -126,12 +124,12 @@ export const MessageInput = ({
           createdAt: "",
           updatedAt: "",
           user: {
-            id: me.id,
+            id: meId,
           },
           otherUser: {
             id: otherUserId,
           },
-          text: inputValue,
+          text: trimmed,
           topic: selectedTopic.label,
           color: selectedOption ? selectedOption.color : "#fff",
         },
@@ -172,7 +170,43 @@ export const MessageInput = ({
 
   if (!options) return <div></div>;
   return (
-    <Pane display="flex" alignItems="flex-end" width="100%" padding=".5rem">
+    <Pane width="100%" padding=".5rem">
+      <Textarea
+        ref={textarea}
+        maxLength={3000}
+        //@ts-ignore
+        onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit();
+          }
+        }}
+        //@ts-ignore
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setInputValue(e.target.value)
+        }
+        value={inputValue}
+        style={{
+          borderRadius: 3,
+          border: "none",
+          flex: "1",
+          resize: "none",
+          outline: 0,
+          boxShadow:
+            selectedTopic.label === "general"
+              ? `inset 0 0 0 1px rgba(67, 90, 111, 0.3)`
+              : `inset 0 0 0 1px ${selectedTopic.color}`,
+          paddingLeft: 10,
+          paddingRight: 10,
+          paddingTop: 10,
+          paddingBottom: 2,
+          width: "calc(100% - 20px)",
+          maxHeight: "10vh",
+          fontFamily:
+            " SF UI Text, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol",
+        }}
+      />
+      <br />
       <SelectMenu
         closeOnSelect
         onFilterChange={(filterValue) => handleFilter(filterValue)}
@@ -186,29 +220,10 @@ export const MessageInput = ({
         selected={selectedTopic.label}
         onSelect={(item) => handleSelectedTopic(item.value as string)}
       >
-        <Button appearance="minimal" /* width={90}  */ /* overflowX="hidden" */>
-          {selectedTopic.label || "Topic"}
-        </Button>
+        <Pane display="flex" justifyContent="center">
+          <Button appearance="minimal">{selectedTopic.label || "Topic"}</Button>
+        </Pane>
       </SelectMenu>
-      <TextInput
-        margin="0"
-        width="100%"
-        onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) =>
-          e.keyCode === 13 && handleSubmit()
-        }
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setInputValue(e.target.value)
-        }
-        value={inputValue}
-        {...(selectedTopic.label !== "general"
-          ? {
-              boxShadow: `inset 0 0 0 1px ${selectedTopic.color}, inset 0 1px 2px ${selectedTopic.color} !important`,
-            }
-          : {})}
-      />
-      {/* <Pane display="flex" alignItems="flex-end">
-        <IconButton appearance="minimal" icon={DirectionRightIcon} />
-      </Pane> */}
     </Pane>
   );
 };
