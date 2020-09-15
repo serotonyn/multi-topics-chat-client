@@ -214,6 +214,9 @@ export const MessagesList = ({
           left="30px"
           opacity="0.9"
           onClick={() => scrollToBottom(container.current)}
+          style={{
+            cursor: "pointer",
+          }}
         />
       )}
     </Pane>

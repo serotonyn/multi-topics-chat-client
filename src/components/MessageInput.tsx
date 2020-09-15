@@ -102,11 +102,11 @@ export const MessageInput = ({
     textarea.current?.focus();
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!inputValue.length || inputValue.length > 3000) return;
     const trimmed = inputValue.trim();
     const selectedOption = options.find((o) => o.label === selectedTopic.label);
-    await createMessage({
+    createMessage({
       variables: {
         text: trimmed,
         topic: selectedTopic.label,
